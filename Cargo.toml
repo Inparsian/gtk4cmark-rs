@@ -1,6 +1,11 @@
 [package]
 name = "gtk4cmark"
-version = "0.1.0"
+description = "A GTK4 widget for rendering CommonMark content."
+license = "MIT"
+homepage = "https://inpr.sn"
+repository = "https://github.com/Inparsian/gtk4cmark"
+readme = "README.md"
+version = "0.0.1"
 edition = "2024"
 
 [dependencies]
