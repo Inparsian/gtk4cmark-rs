@@ -5,7 +5,7 @@ license = "MIT"
 homepage = "https://inpr.sn"
 repository = "https://github.com/Inparsian/gtk4cmark-rs"
 readme = "README.md"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2024"
 
 [dependencies]
