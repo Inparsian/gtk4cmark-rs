@@ -1,6 +1,7 @@
 pub mod code;
 pub mod text;
 pub mod table;
+pub mod thematicbreak;
 
 use std::{any::Any, fmt::{Debug, Formatter, Result}};
 use markdown::mdast::Node;

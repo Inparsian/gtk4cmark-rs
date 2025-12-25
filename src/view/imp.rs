@@ -15,6 +15,7 @@ use super::super::blocks::BlockWidgetFactory;
 use super::super::blocks::text::{TextBlock, TextBlockFactory};
 use super::super::blocks::code::{CodeBlock, CodeBlockFactory};
 use super::super::blocks::table::{TableBlock, TableBlockFactory};
+use super::super::blocks::thematicbreak::ThematicBreakBlockFactory;
 
 const DEPTH_MULTIPLIER: i32 = 16;
 const MARKER_SPACING: i32 = 4;
@@ -23,6 +24,7 @@ static FACTORIES: LazyLock<Vec<Box<dyn BlockWidgetFactory + Send + Sync>>> = Laz
     Box::new(TextBlockFactory),
     Box::new(CodeBlockFactory),
     Box::new(TableBlockFactory),
+    Box::new(ThematicBreakBlockFactory),
 ]);
 
 #[derive(Default, Properties)]
@@ -131,6 +133,10 @@ impl MarkdownView {
 
             Node::Table(table) => if let Some(table_block) = self.add_block(i, block, children) {
                 table_block.block.downcast_ref::<TableBlock>().unwrap().set_table(table);
+            },
+
+            Node::ThematicBreak(_) => {
+                self.add_block(i, block, children);
             },
 
             _ => {},

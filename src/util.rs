@@ -51,7 +51,7 @@ pub fn is_block_node(node: &Node) -> bool {
             | Node::Heading(_)
             | Node::Code(_)
             | Node::Table(_)
-            //| Node::ThematicBreak(_)
+            | Node::ThematicBreak(_)
     )
 }
 
