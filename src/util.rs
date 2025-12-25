@@ -1,3 +1,4 @@
+use gtk4::prelude::{IsA, WidgetExt as _};
 use markdown::mdast::Node;
 
 /// Returns the enum variant name for a markdown AST node (e.g. `Paragraph`).
@@ -99,4 +100,15 @@ pub fn inline_node_to_pango_markup(node: &Node) -> String {
         },
         _ => String::new()
     }
+}
+
+/// Iterates through the children of a Widget and collects them into a vector.
+pub fn get_widget_children(box_widget: &impl IsA<gtk4::Widget>) -> Vec<gtk4::Widget> {
+    let mut children = Vec::new();
+    let mut widget = box_widget.first_child();
+    while let Some(child) = widget {
+        widget = child.next_sibling();
+        children.push(child);
+    }
+    children
 }

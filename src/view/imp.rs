@@ -6,8 +6,8 @@ use gtk4::glib::{self, Properties};
 use gtk4::subclass::prelude::*;
 use gtk4::prelude::*;
 use markdown::ParseOptions;
-use relm4::RelmIterChildrenExt as _;
 
+use crate::util::get_widget_children;
 use super::MarkdownBlock;
 use super::super::ir::{RenderBuffer, RenderBlock};
 use super::super::blocks::{BlockWidgetFactory, text, thematicbreak, code, table};
@@ -127,7 +127,7 @@ impl MarkdownView {
             && let Some(previous_box) = children.get(i - 1)
             && let Ok(bx) = previous_box.clone().downcast::<gtk4::Box>()
         {
-            for child in bx.iter_children() {
+            for child in get_widget_children(&bx) {
                 if let Ok(label) = &child.clone().downcast::<gtk4::Label>() {
                     // the Label might not be rendered yet, so we can't use it's width allocation.
                     let text = label.text();

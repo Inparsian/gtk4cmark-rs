@@ -11,5 +11,4 @@ edition = "2024"
 [dependencies]
 gtk4 = "0.10.3"
 markdown = "1.0.0"
-relm4 = "0.10.0"
 sourceview5 = "0.10.0"
