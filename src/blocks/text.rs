@@ -54,6 +54,7 @@ impl Default for TextBlock {
             .hexpand(true)
             .xalign(0.0)
             .wrap(true)
+            .wrap_mode(gtk4::pango::WrapMode::WordChar)
             .selectable(true)
             .label("")
             .build();

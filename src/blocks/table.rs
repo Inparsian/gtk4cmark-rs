@@ -106,6 +106,7 @@ impl TableBlock {
             
                 let label = gtk4::Label::builder()
                     .wrap(true)
+                    .wrap_mode(gtk4::pango::WrapMode::WordChar)
                     .selectable(true)
                     .hexpand(true)
                     .halign(gtk4::Align::Fill)

@@ -38,6 +38,8 @@ impl MarkdownBlock {
 
             let marker_label = gtk4::Label::builder()
                 .css_classes(["marker-label"])
+                .wrap(true)
+                .wrap_mode(gtk4::pango::WrapMode::WordChar)
                 .valign(gtk4::Align::Start)
                 .label(indicator)
                 .build();

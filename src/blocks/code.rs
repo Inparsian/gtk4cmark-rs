@@ -93,6 +93,7 @@ impl Default for CodeBlock {
             .halign(gtk4::Align::Start)
             .valign(gtk4::Align::Start)
             .wrap(true)
+            .wrap_mode(gtk4::pango::WrapMode::WordChar)
             .selectable(false)
             .label("plaintext")
             .build();
