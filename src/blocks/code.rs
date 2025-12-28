@@ -89,11 +89,10 @@ impl Default for CodeBlock {
 
         let lang_label = gtk4::Label::builder()
             .css_classes(["cmark-codeblock-lang"])
-            .justify(gtk4::Justification::Left)
-            .halign(gtk4::Align::Start)
+            .xalign(0.0)
+            .hexpand(true)
             .valign(gtk4::Align::Start)
-            .wrap(true)
-            .wrap_mode(gtk4::pango::WrapMode::WordChar)
+            .ellipsize(gtk4::pango::EllipsizeMode::End)
             .selectable(false)
             .label("plaintext")
             .build();
