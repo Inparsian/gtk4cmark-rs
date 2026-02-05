@@ -1,4 +1,4 @@
-use markdown::mdast::Node;
+use markdown::mdast::{Node, Paragraph, Text};
 
 use super::util;
 
@@ -36,6 +36,7 @@ struct RenderListScope {
 #[derive(Default, Debug, Clone)]
 struct RenderWalkContext {
     list_stack: Vec<RenderListScope>,
+    paragraph_stack: Vec<Vec<Node>>,
 }
 
 impl RenderWalkContext {
@@ -70,10 +71,49 @@ impl RenderBuffer {
         self.blocks.clear();
         let mut walk_ctx = RenderWalkContext::default();
         self.walk(node, &mut walk_ctx);
+        self.drain_paragraph_stack(&mut walk_ctx);
+    }
+    
+    /// Drains the paragraph stack.
+    fn drain_paragraph_stack(&mut self, ctx: &mut RenderWalkContext) {
+        if !ctx.paragraph_stack.is_empty() {
+            let len = ctx.paragraph_stack.len();
+            let mut children = Vec::new();
+            for (i, paragraph) in ctx.paragraph_stack.drain(..).enumerate() {
+                children.extend(paragraph);
+                
+                if i < len - 1 {
+                    children.push(Node::Text(Text {
+                        value: "\n\n".to_owned(),
+                        position: None,
+                    }));
+                }
+            }
+            
+            let node = Node::Paragraph(Paragraph {
+                children,
+                position: None,
+            });
+            
+            self.push_block(RenderBlock {
+                node,
+                depth: ctx.depth(),
+                marker: None,
+                is_continuation: false,
+            });
+        }
     }
 
     /// Recursively walks the AST and populates the render buffer.
     fn walk(&mut self, node: &Node, ctx: &mut RenderWalkContext) {
+        // Merge adjacent paragraphs
+        if let Node::Paragraph(paragraph) = node {
+            ctx.paragraph_stack.push(paragraph.children.clone());
+            return;
+        }
+        
+        self.drain_paragraph_stack(ctx);
+        
         match node {
             Node::List(list) => if let Some(children) = node.children() {
                 let list_type = if list.ordered {
