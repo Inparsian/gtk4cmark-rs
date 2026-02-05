@@ -6,7 +6,7 @@ use super::{BlockWidget, BlockWidgetFactory};
 use super::super::util;
 
 #[derive(Debug, Clone)]
-pub struct TableBlock {
+struct TableBlock {
     root: gtk4::Grid,
     rows: Rc<RefCell<Vec<Vec<gtk4::Label>>>>,
 }

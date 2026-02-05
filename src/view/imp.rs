@@ -10,23 +10,32 @@ use markdown::ParseOptions;
 use crate::util::get_widget_children;
 use super::MarkdownBlock;
 use super::super::ir::{RenderBuffer, RenderBlock};
-use super::super::blocks::{BlockWidgetFactory, text, thematicbreak, code, table};
+use super::super::blocks::{
+    BlockWidgetFactory,
+    TextBlockFactory,
+    TableBlockFactory,
+    ThematicBreakBlockFactory,
+    CodeBlock, CodeBlockFactory,
+};
 
 const DEPTH_MULTIPLIER: i32 = 16;
 const MARKER_SPACING: i32 = 4;
 
 static FACTORIES: LazyLock<Vec<Box<dyn BlockWidgetFactory + Send + Sync>>> = LazyLock::new(|| vec![
-    Box::new(text::TextBlockFactory),
-    Box::new(code::CodeBlockFactory),
-    Box::new(table::TableBlockFactory),
-    Box::new(thematicbreak::ThematicBreakBlockFactory),
+    Box::new(TextBlockFactory),
+    Box::new(CodeBlockFactory),
+    Box::new(TableBlockFactory),
+    Box::new(ThematicBreakBlockFactory),
 ]);
+
+type CodeBlockCallback = Box<dyn Fn(&CodeBlock)>;
 
 #[derive(Default, Properties)]
 #[properties(wrapper_type = super::MarkdownView)]
 pub struct MarkdownView {
     pub(super) buffer: Rc<RefCell<RenderBuffer>>,
     pub(super) blocks: Rc<RefCell<HashMap<usize, MarkdownBlock>>>,
+    pub(super) code_block_callback: Rc<RefCell<Option<CodeBlockCallback>>>,
 
     #[property(get, set)]
     markdown: Rc<RefCell<String>>,
@@ -170,18 +179,25 @@ impl MarkdownView {
     fn add_block(
         &self,
         i: usize,
-        block: &RenderBlock,
+        render_block: &RenderBlock,
         children: &[gtk4::Widget],
     ) -> Option<MarkdownBlock> {
-        let (text_block, reused) = self.create_or_reuse_block(i, block)?;
-        let continuation_depth = Self::get_continuation_depth(i, block, children);
+        let (block, reused) = self.create_or_reuse_block(i, render_block)?;
+        let continuation_depth = Self::get_continuation_depth(i, render_block, children);
 
-        text_block.root.set_margin_start((block.depth as i32 * DEPTH_MULTIPLIER) + continuation_depth);
+        block.root.set_margin_start((render_block.depth as i32 * DEPTH_MULTIPLIER) + continuation_depth);
 
         if !reused {
-            self.obj().append(&text_block.root);
+            if let Some(code_block_callback) = self.code_block_callback.borrow().as_ref()
+                && let Some(code_block) = block.block.downcast_ref::<CodeBlock>()
+            {
+                code_block_callback(code_block);
+                self.obj().append(&code_block.container);
+            } else {
+                self.obj().append(&block.root);
+            }
         }
 
-        Some(text_block)
+        Some(block)
     }
 }

@@ -1,12 +1,19 @@
-pub mod code;
-pub mod text;
-pub mod table;
-pub mod thematicbreak;
+mod code;
+mod text;
+mod table;
+mod thematicbreak;
 
-use std::{any::Any, fmt::{Debug, Formatter, Result}};
+use std::any::Any;
+use std::fmt::{Debug, Formatter, Result};
 use markdown::mdast::Node;
 
-pub trait BlockWidget: Any {
+pub use code::CodeBlock;
+pub(crate) use code::CodeBlockFactory;
+pub(crate) use text::TextBlockFactory;
+pub(crate) use table::TableBlockFactory;
+pub(crate) use thematicbreak::ThematicBreakBlockFactory;
+
+pub(crate) trait BlockWidget: Any {
     fn root(&self) -> &gtk4::Widget;
     fn update(&mut self, node: &Node);
     fn valid_node(&self, node: &Node) -> bool;
@@ -33,7 +40,7 @@ impl dyn BlockWidget {
     }
 }
 
-pub trait BlockWidgetFactory {
+pub(crate) trait BlockWidgetFactory {
     fn create(&self) -> Box<dyn BlockWidget>;
     fn matches(&self, node: &Node) -> bool;
 }

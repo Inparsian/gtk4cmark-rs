@@ -1,7 +1,9 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use futures_signals::signal::Mutable;
 use gtk4::prelude::*;
+use gtk4::TextBuffer;
 use sourceview5::{View, Buffer, LanguageManager, StyleSchemeManager, BackgroundPatternType};
 use sourceview5::prelude::*;
 use markdown::mdast::Node;
@@ -10,16 +12,19 @@ use super::{BlockWidget, BlockWidgetFactory};
 
 #[derive(Debug, Clone)]
 pub struct CodeBlock {
-    root: gtk4::Box,
     source_view: View,
-    lang_label: Option<gtk4::Label>,
-    lang: Option<String>,
     line_cache: Rc<RefCell<HashMap<usize, (String, String)>>>,
+    /// The container widget for the code block.
+    pub container: gtk4::Box,
+    /// The `ScrolledWindow` containing the source view.
+    pub root: gtk4::ScrolledWindow,
+    /// The language of the code block.
+    pub lang: Mutable<Option<String>>,
 }
 
 impl BlockWidget for CodeBlock {
     fn root(&self) -> &gtk4::Widget {
-        self.root.upcast_ref()
+        self.container.upcast_ref()
     }
 
     fn update(&mut self, node: &Node) {
@@ -35,11 +40,11 @@ impl BlockWidget for CodeBlock {
 
     fn clone(&self) -> Box<dyn BlockWidget> {
         Box::new(Self {
-            root: self.root.clone(),
             source_view: self.source_view.clone(),
-            lang_label: self.lang_label.clone(),
-            lang: self.lang.clone(),
             line_cache: Rc::new(RefCell::new(HashMap::new())),
+            container: self.container.clone(),
+            root: self.root.clone(),
+            lang: self.lang.clone(),
         })
     }
 
@@ -70,7 +75,7 @@ impl Default for CodeBlock {
             .background_pattern(BackgroundPatternType::None)
             .build();
 
-        let window = gtk4::ScrolledWindow::builder()
+        let root = gtk4::ScrolledWindow::builder()
             .css_classes(["cmark-codeblock-window"])
             .hscrollbar_policy(gtk4::PolicyType::Automatic)
             .vscrollbar_policy(gtk4::PolicyType::Automatic)
@@ -80,26 +85,7 @@ impl Default for CodeBlock {
             .child(&source_view)
             .build();
 
-        let header_box = gtk4::Box::builder()
-            .css_classes(["cmark-codeblock-header"])
-            .orientation(gtk4::Orientation::Horizontal)
-            .halign(gtk4::Align::Fill)
-            .valign(gtk4::Align::Start)
-            .build();
-
-        let lang_label = gtk4::Label::builder()
-            .css_classes(["cmark-codeblock-lang"])
-            .xalign(0.0)
-            .hexpand(true)
-            .valign(gtk4::Align::Start)
-            .ellipsize(gtk4::pango::EllipsizeMode::End)
-            .selectable(false)
-            .label("plaintext")
-            .build();
-
-        header_box.append(&lang_label);
-
-        let root = gtk4::Box::builder()
+        let container = gtk4::Box::builder()
             .css_classes(["cmark-codeblock"])
             .orientation(gtk4::Orientation::Vertical)
             .halign(gtk4::Align::Fill)
@@ -107,48 +93,45 @@ impl Default for CodeBlock {
             .overflow(gtk4::Overflow::Hidden)
             .build();
 
-        root.append(&header_box);
-        root.append(&window);
+        container.append(&root);
 
         Self {
-            root,
             source_view,
-            lang: None,
-            lang_label: Some(lang_label),
             line_cache: Rc::new(RefCell::new(HashMap::new())),
+            container,
+            root,
+            lang: Mutable::new(None),
         }
     }
 }
 
 impl CodeBlock {
-    fn set_lang(&mut self, lang: Option<&String>) {
+    /// Gets the `TextBuffer` for the underlying source view.
+    pub fn buffer(&self) -> TextBuffer {
+        self.source_view.buffer()
+    }
+    
+    fn set_lang(&self, lang: Option<&String>) {
         let old_lang = self.lang.clone();
-        if old_lang == lang.cloned() {
+        if old_lang.get_cloned() == lang.cloned() {
             return;
         }
         
-        self.lang = lang.cloned();
-        if let Some(lang_label) = &self.lang_label {
-            lang_label.set_label(
-                lang.as_ref()
-                    .map_or("plaintext", |l| l.as_str()),
-            );
+        self.lang.set(lang.cloned());
+        let buffer = self.source_view.buffer();
+        let buffer = buffer
+            .downcast_ref::<Buffer>()
+            .expect("Buffer is not a SourceView5 Buffer");
 
-            let buffer = self.source_view.buffer();
-            let buffer = buffer
-                .downcast_ref::<Buffer>()
-                .expect("Buffer is not a SourceView5 Buffer");
-
-            if let Some(language) = LanguageManager::new().language(lang.unwrap_or(&"plaintext".to_owned())) {
-                buffer.set_language(Some(&language));
-            } else {
-                buffer.set_language(None);
-            }
+        if let Some(language) = LanguageManager::new().language(lang.unwrap_or(&"plaintext".to_owned())) {
+            buffer.set_language(Some(&language));
+        } else {
+            buffer.set_language(None);
         }
         self.line_cache.borrow_mut().clear();
     }
     
-    pub fn set_markup(&self, code: &str) {
+    fn set_markup(&self, code: &str) {
         let buffer = self.source_view.buffer();
         let start = buffer.start_iter();
         let end = buffer.end_iter();

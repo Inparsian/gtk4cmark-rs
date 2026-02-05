@@ -14,7 +14,7 @@ const HEADER_SIZES: [(usize, &str); 6] = [
 ];
 
 #[derive(Debug, Clone)]
-pub struct TextBlock {
+struct TextBlock {
     root: gtk4::Label,
 }
 

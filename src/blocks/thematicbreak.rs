@@ -4,7 +4,7 @@ use markdown::mdast::Node;
 use super::{BlockWidget, BlockWidgetFactory};
 
 #[derive(Debug, Clone)]
-pub struct ThematicBreakBlock {
+struct ThematicBreakBlock {
     root: gtk4::Separator,
 }
 

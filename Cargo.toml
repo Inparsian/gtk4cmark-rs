@@ -12,6 +12,7 @@ edition = "2024"
 all-features = true
 
 [dependencies]
+futures-signals = "0.3.34"
 gtk4 = "0.10.3"
 markdown = "1.0.0"
 sourceview5 = "0.10.0"
