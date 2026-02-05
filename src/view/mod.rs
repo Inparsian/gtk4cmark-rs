@@ -20,7 +20,7 @@ impl Default for MarkdownView {
 const MARKER_SPACING: i32 = 4;
 
 #[derive(Debug, Clone)]
-pub struct MarkdownBlock {
+struct MarkdownBlock {
     root: gtk4::Widget,
     block: Box<dyn BlockWidget>,
 }

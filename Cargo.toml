@@ -8,6 +8,9 @@ readme = "README.md"
 version = "0.0.3"
 edition = "2024"
 
+[package.metadata.docs.rs]
+all-features = true
+
 [dependencies]
 gtk4 = "0.10.3"
 markdown = "1.0.0"
